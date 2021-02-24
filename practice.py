@@ -60,8 +60,8 @@ assert(len(pizza_data) == m)
 
 for i, l in enumerate(pizza_data):
     ingredients = l.strip().split(' ')
-    i = int(ingredients.pop(0))
-    assert(len(ingredients) == i)
+    n = int(ingredients.pop(0))
+    assert(len(ingredients) == n)
     pizzas.append(Pizza(set(ingredients), i))
 
 for team in teams:

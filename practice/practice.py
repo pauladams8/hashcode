@@ -18,7 +18,7 @@ teams = []
 
 
 def distinct_ingredients(pizzas):
-    return set((ingredient for pizza in pizzas for ingredient in pizza.ingredients))
+    return set(ingredient for pizza in pizzas for ingredient in pizza.ingredients)
 
 
 class Team():
@@ -28,9 +28,8 @@ class Team():
 
 
 class Pizza():
-    def __init__(self, ingredients, id):
+    def __init__(self, ingredients):
         self.ingredients = ingredients
-        self.id = id
 
 
 def validate(numInTeam, numofPizza, num_deliveries, no_2_person_teams, no_3_person_teams, no_4_person_teams):
@@ -58,36 +57,38 @@ for _ in range(no_4_person_teams):
 pizza_data = input.read().split('\n')
 assert(len(pizza_data) == m)
 
-for i, l in enumerate(pizza_data):
+for l in pizza_data:
     ingredients = l.strip().split(' ')
     n = int(ingredients.pop(0))
     assert(len(ingredients) == n)
-    pizzas.append(Pizza(set(ingredients), i))
+    pizzas.append(Pizza(ingredients))
 
-for team in teams:
-    # We need to maximise the number of distinct ingredients on the team's pizza, so let's try each chuck of size team.size
-    combinations = [chunk for chunk in itertools.combinations(
-        pizzas, team.size)]
+for i, team in enumerate(teams):
+    # We need to maximise the number of distinct ingredients on the team's pizza
+    team.pizzas = max(
+        # Generate all possible combinations of length
+        itertools.combinations(
+            # Retain the indexes for output
+            # We must deliver pizzas to every team member
+            enumerate(pizzas), team.size
+        ),
+        # c is a combination of (i, pizza) tuples of length team.size
+        # We sort the combinations by the number of distinct ingredients on their pizzas
+        key=lambda c: len(distinct_ingredients(pizza for _, pizza in c)),
+        default=[]
+    )
 
-    comb_max = 0
+    for i, _ in team.pizzas:
+        # Remove the pizzas in team.pizzas from the global pizza pool, since they've been allocated
+        del pizzas[i]
 
-    for combination in combinations:
-        comb_len = len(distinct_ingredients(combination))
-        if comb_len > comb_max:
-            comb_max = comb_len
-            team.pizzas = combination
-
-    # We need to remove the pizzas in team.pizzas from the global pizza pool, since they've been allocated
-    for pizza in team.pizzas:
-        pizzas.remove(pizza)
-
-# filter out any teams with no pizzas, we will not deliver to them :(
-teams = [team for team in teams if team.pizzas]
+# filter out any teams with insufficient pizzas, we cannot deliver to them :(
+teams = [team for team in teams if len(team.pizzas) == team.size]
 
 print(str(len(teams)))
 
 for team in teams:
-    print(team.size, *(pizza.id for pizza in team.pizzas))
+    print(team.size, *(str(i + 1) for i, _ in team.pizzas))
 
 
 exit()
